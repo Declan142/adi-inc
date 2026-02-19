@@ -383,6 +383,9 @@
             }
         }
         
+        // API URL - Update this after deploying to Render
+        const API_URL = 'https://adi-inc-chat.onrender.com';
+        
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const messages = document.getElementById('chatMessages');
@@ -403,23 +406,44 @@
             // Show typing indicator
             typing.classList.add('show');
             
-            // Simulate response
-            setTimeout(() => {
+            try {
+                // Send to backend
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        user: 'website_visitor'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
                 typing.classList.remove('show');
                 
-                const responses = [
-                    "Thanks for your message! I'll connect you with Aditya shortly.",
-                    "Message received! Our team will get back to you soon.",
-                    "Thanks for reaching out! We'll respond within 24 hours."
-                ];
-                
+                // Add bot response
                 messages.innerHTML += `
                     <div class="message bot">
-                        <div class="message-bubble">${responses[Math.floor(Math.random() * responses.length)]}</div>
+                        <div class="message-bubble">${data.reply || "Message received! We'll get back to you soon."}</div>
                     </div>
                 `;
                 messages.scrollTop = messages.scrollHeight;
-            }, 1500);
+                
+            } catch (error) {
+                // Hide typing indicator
+                typing.classList.remove('show');
+                
+                // Fallback response
+                messages.innerHTML += `
+                    <div class="message bot">
+                        <div class="message-bubble">Thanks for your message! (Demo mode - server not connected yet)</div>
+                    </div>
+                `;
+                messages.scrollTop = messages.scrollHeight;
+            }
         }
         
         function escapeHtml(text) {
